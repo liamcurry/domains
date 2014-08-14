@@ -3,7 +3,6 @@ package domains
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"os/exec"
 	"strings"
@@ -32,7 +31,7 @@ func NewWhoisChecker(servers []string) *WhoisChecker {
 
 const (
 	// any more than this means it's probably a valid whois and unavailable.
-	isTakenThreshold = 1000
+	isTakenThreshold = 3000
 	// if whois has this text it is unavailable
 	notFoundText = "No match"
 )
@@ -43,7 +42,6 @@ func (w *WhoisChecker) WhoisAny(domain string) []byte {
 	find := func(i int) {
 		res, err := Whois(domain, w.servers[i])
 		if err != nil {
-			log.Println(err)
 			return
 		}
 
@@ -146,9 +144,10 @@ func (m *MultiChecker) CheckerFunc(fn func(domain string) bool) {
 }
 
 func NewChecker() Checker {
-	m := domains.MultiChecker{}
-	m.CheckerFunc(domains.NSLookupChecker)
-	m.Checker(domains.DefaultWhois)
+	m := &MultiChecker{}
+	m.CheckerFunc(NSLookupChecker)
+	m.Checker(DefaultWhois)
+	return m
 }
 
 var DefaultWhois = NewWhoisChecker(DefaultServers)
